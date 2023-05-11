@@ -116,16 +116,6 @@ export function createServer() {
         readThroughCache,
         async (c) => {
             const path = new URL(c.req.url).pathname;
-            // const ten_minutes = 600_000;
-            // let bodykey = `__body__${path}`
-            // let headerskey = `__headers__${path}`
-            // let body = KVCache.get(bodykey);
-            // if (body) {
-            //     let headers = KVCache.get(headerskey);
-            //     if (headers) {
-            //         return new Response(body.body, {headers: await headers.json()})
-            //     }
-            // }
             let response;
             if (path.endsWith('/')) {
                 response = await serveDirectoryBrowser(c)
@@ -133,13 +123,6 @@ export function createServer() {
                 response =  await serveFileBrowser(c)
             }
             return response
-            // let [body1, body2] = response.body.tee();
-            // c.executionCtx.waitUntil(streamToString(body1).then(value => {
-            //     KVCache.set(bodykey, value, ten_minutes);
-            // }));
-            // const headers = Object.fromEntries(response.headers.entries())
-            // KVCache.set(headerskey, JSON.stringify(headers), ten_minutes);
-            // return new Response(body2, response)
         }
     );
 
