@@ -1,0 +1,129 @@
+diff --git a/node_modules/@fastly/js-compute/js-compute-runtime-cli.js b/node_modules/@fastly/js-compute/js-compute-runtime-cli.js
+index 6c41825..edd5e37 100755
+--- a/node_modules/@fastly/js-compute/js-compute-runtime-cli.js
++++ b/node_modules/@fastly/js-compute/js-compute-runtime-cli.js
+@@ -6,6 +6,7 @@ import { printHelp } from "./src/printHelp.js";
+ import { addSdkMetadataField } from "./src/addSdkMetadataField.js";
+ 
+ const {
++  enableExperimentalKVCache,
+   enableExperimentalHighResolutionTimeMethods,
+   wasmEngine,
+   input,
+@@ -27,7 +28,7 @@ if (version) {
+   // it could be that the user is using an older version of js-compute-runtime
+   // and a newer version does support the platform they are using.
+   const {compileApplicationToWasm} = await import('./src/compileApplicationToWasm.js')
+-  await compileApplicationToWasm(input, output, wasmEngine, enableExperimentalHighResolutionTimeMethods);
++  await compileApplicationToWasm(input, output, wasmEngine, enableExperimentalHighResolutionTimeMethods, enableExperimentalKVCache);
+   if (component) {
+     const {compileComponent} = await import('./src/component.js');
+     await compileComponent(output);
+diff --git a/node_modules/@fastly/js-compute/js-compute-runtime-component.wasm b/node_modules/@fastly/js-compute/js-compute-runtime-component.wasm
+index fe5acc7..daaad13 100755
+Binary files a/node_modules/@fastly/js-compute/js-compute-runtime-component.wasm and b/node_modules/@fastly/js-compute/js-compute-runtime-component.wasm differ
+diff --git a/node_modules/@fastly/js-compute/js-compute-runtime.wasm b/node_modules/@fastly/js-compute/js-compute-runtime.wasm
+index 49a593d..dfed6dd 100755
+Binary files a/node_modules/@fastly/js-compute/js-compute-runtime.wasm and b/node_modules/@fastly/js-compute/js-compute-runtime.wasm differ
+diff --git a/node_modules/@fastly/js-compute/src/bundle.js b/node_modules/@fastly/js-compute/src/bundle.js
+index a28c930..a6e1ff2 100644
+--- a/node_modules/@fastly/js-compute/src/bundle.js
++++ b/node_modules/@fastly/js-compute/src/bundle.js
+@@ -31,6 +31,7 @@ export const allowDynamicBackends = Object.getOwnPropertyDescriptor(globalThis.f
+         case 'logger': { return { contents: `export const Logger = globalThis.Logger;` } }
+         case 'object-store': { return { contents: `export const ObjectStore = globalThis.ObjectStore;` } }
+         case 'secret-store': { return { contents: `export const SecretStore = globalThis.SecretStore;export const SecretStoreEntry = globalThis.SecretStoreEntry;` } }
++        case 'kv-cache': { return { contents: `export const KVCache = globalThis.KVCache;export const KVCacheEntry = globalThis.KVCacheEntry;` } }
+       }
+     })
+   },
+diff --git a/node_modules/@fastly/js-compute/src/compileApplicationToWasm.js b/node_modules/@fastly/js-compute/src/compileApplicationToWasm.js
+index 35833dd..cd8b591 100644
+--- a/node_modules/@fastly/js-compute/src/compileApplicationToWasm.js
++++ b/node_modules/@fastly/js-compute/src/compileApplicationToWasm.js
+@@ -8,7 +8,7 @@ import { precompile } from "./precompile.js";
+ import { bundle } from "./bundle.js";
+ import { containsSyntaxErrors } from "./containsSyntaxErrors.js";
+ 
+-export async function compileApplicationToWasm(input, output, wasmEngine, enableExperimentalHighResolutionTimeMethods = false) {
++export async function compileApplicationToWasm(input, output, wasmEngine, enableExperimentalHighResolutionTimeMethods = false, enableExperimentalKVCache = false) {
+   try {
+     if (!(await isFile(input))) {
+       console.error(
+@@ -99,7 +99,8 @@ export async function compileApplicationToWasm(input, output, wasmEngine, enable
+         shell: true,
+         encoding: "utf-8",
+         env: {
+-          ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS: enableExperimentalHighResolutionTimeMethods ? '1' : '0'
++          ENABLE_EXPERIMENTAL_HIGH_RESOLUTION_TIME_METHODS: enableExperimentalHighResolutionTimeMethods ? '1' : '0',
++          ENABLE_EXPERIMENTAL_KV_CACHE: enableExperimentalKVCache ? '1' : '0',
+         }
+       }
+     );
+diff --git a/node_modules/@fastly/js-compute/src/parseInputs.js b/node_modules/@fastly/js-compute/src/parseInputs.js
+index 0297ef6..5876727 100644
+--- a/node_modules/@fastly/js-compute/src/parseInputs.js
++++ b/node_modules/@fastly/js-compute/src/parseInputs.js
+@@ -8,6 +8,7 @@ export async function parseInputs(cliInputs) {
+ 
+   let component = false;
+   let enableExperimentalHighResolutionTimeMethods = false;
++  let enableExperimentalKVCache = false;
+   let customEngineSet = false;
+   let wasmEngine = join(__dirname, "../js-compute-runtime.wasm");
+   let customInputSet = false;
+@@ -25,6 +26,10 @@ export async function parseInputs(cliInputs) {
+         enableExperimentalHighResolutionTimeMethods = true;
+         break;
+       }
++      case "--enable-experimental-kv-cache": {
++        enableExperimentalKVCache = true;
++        break;
++      }
+       case "-V":
+       case "--version": {
+         return { version: true };
+@@ -93,5 +98,12 @@ export async function parseInputs(cliInputs) {
+       }
+     }
+   }
+-  return { wasmEngine, component, input, output, enableExperimentalHighResolutionTimeMethods };
++  return {
++    wasmEngine,
++    component,
++    input,
++    output,
++    enableExperimentalHighResolutionTimeMethods,
++    enableExperimentalKVCache
++  };
+ }
+diff --git a/node_modules/@fastly/js-compute/types/fastly:kv-cache.d.ts b/node_modules/@fastly/js-compute/types/fastly:kv-cache.d.ts
+new file mode 100644
+index 0000000..528d560
+--- /dev/null
++++ b/node_modules/@fastly/js-compute/types/fastly:kv-cache.d.ts
+@@ -0,0 +1,14 @@
++declare module "fastly:kv-cache" {
++  export class KVCache {
++    static get(key: string): KVCacheEntry | null;
++    static set(key: string, value: BodyInit, ttl: number): undefined;
++  }
++
++  interface KVCacheEntry {
++    get body(): ReadableStream;
++    get bodyUsed(): boolean;
++    text(): Promise<string>;
++    json(): Promise<object>;
++    arrayBuffer(): Promise<ArrayBuffer>;
++  }
++}
+diff --git a/node_modules/@fastly/js-compute/types/index.d.ts b/node_modules/@fastly/js-compute/types/index.d.ts
+index f98754d..fb14403 100644
+--- a/node_modules/@fastly/js-compute/types/index.d.ts
++++ b/node_modules/@fastly/js-compute/types/index.d.ts
+@@ -7,4 +7,5 @@
+ /// <reference path="fastly:geolocation.d.ts" />
+ /// <reference path="fastly:logger.d.ts" />
+ /// <reference path="fastly:object-store.d.ts" />
++/// <reference path="fastly:kv-cache.d.ts" />
+ /// <reference path="globals.d.ts" />

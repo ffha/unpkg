@@ -1,0 +1,28 @@
+# This file describes a Fastly Compute@Edge package. To learn more visit:
+# https://developer.fastly.com/reference/fastly-toml/
+
+authors = [""]
+description = ""
+language = "javascript"
+manifest_version = 2
+name = "Hono"
+service_id = "ySx2d98nExF6vIlY66PNq0"
+
+[local_server]
+
+  [local_server.backends]
+
+    [local_server.backends.npm]
+      override_host = "registry.npmjs.org"
+      url = "https://registry.npmjs.org"
+
+[scripts]
+  build = "npm run build"
+
+[setup]
+
+  [setup.backends]
+
+    [setup.backends.npm]
+      address = "registry.npmjs.org"
+      port = 443
