@@ -8,7 +8,7 @@ export function createPackageURL(
 
   if (packageVersion) url += `@${packageVersion}`;
   if (filename) url += filename;
-  if (query) {
+  if (query.size) {
     query.sort();
     url += '?' + query.toString();
   }

@@ -21,11 +21,12 @@ export class Untar {
     constructor(arrayBuffer) {
         this._stream = new UntarStream(arrayBuffer);
     }
-    getFolder(folder) {
+    getFolder(folder = '/') {
         const files = [];
         const folders = new Set();
         const stream = this._stream;
         let match;
+        const isNotRootFolder = folder !== '/';
         while (this.hasNext()) {
             const file = {};
             let headerBeginPos = stream.position();
@@ -54,7 +55,14 @@ export class Untar {
                 dataEndPos += 512 - file.size % 512;
             }
             if (dirname(file.path).startsWith(folder)) {
-                match = file.path.match(subfolder)
+                if (isNotRootFolder) {
+                    let index = file.path.indexOf(folder)
+                    index = index ? index + folder.length : folder.length;
+                    let path = file.path.substring(index)
+                    match = path.match(subfolder)
+                } else {
+                    match = file.path.match(subfolder)
+                }
                 if (match) {
                     const folder = match[1];
                     if (!folders.has(folder)) {

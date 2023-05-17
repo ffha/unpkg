@@ -1,6 +1,6 @@
 /// <reference types="@fastly/js-compute" />
 import { env } from 'fastly:env';
-import { KVCache } from 'fastly:kv-cache';
+// import { KVCache } from 'fastly:kv-cache';
 import { LinearRouter } from 'hono/router/linear-router'
 import { Hono } from 'hono'
 import { logger } from 'hono/logger'
@@ -22,68 +22,79 @@ import { serveFileBrowser } from "./actions/serveFileBrowser.js";
 import favicon from './favicon.js'
 
 // TODO: Implement ReadableStream getIterator() and [@@asyncIterator]() methods
-async function streamToString(stream) {
-	const decoder = new TextDecoder();
-	let string = '';
-	let reader = stream.getReader()
-	// eslint-disable-next-line no-constant-condition
-	while (true) {
-		const { done, value } = await reader.read();
-		if (done) {
-			return string;
-		}
-		string += decoder.decode(value)
-	}
-}
+// async function streamToString(stream) {
+// 	const decoder = new TextDecoder();
+// 	let string = '';
+// 	let reader = stream.getReader()
+// 	// eslint-disable-next-line no-constant-condition
+// 	while (true) {
+// 		const { done, value } = await reader.read();
+// 		if (done) {
+// 			return string;
+// 		}
+// 		string += decoder.decode(value)
+// 	}
+// }
 
-async function readThroughCache(c, next) {
-    const url = new URL(c.req.url)
-    const key = url.pathname + url.search;
-    const ten_minutes = 600_000;
-    let bodykey = `__body__${key}`
-    let headerskey = `__headers__${key}`
-    let body = KVCache.get(bodykey);
-    if (body) {
-        let headers = KVCache.get(headerskey);
-        if (headers) {
-            return new Response(body.body, {headers: await headers.json()})
-        }
-    }
-    await next();
-    let [body1, body2] = c.res.body.tee();
-    c.executionCtx.waitUntil(streamToString(body1).then(value => {
-        KVCache.set(bodykey, value, ten_minutes);
-    }));
-    const headers = Object.fromEntries(c.res.headers.entries())
-    KVCache.set(headerskey, JSON.stringify(headers), ten_minutes);
-    c.res = new Response(body2, c.res)
-}
+// async function readThroughCache(c, next) {
+//     const url = new URL(c.req.url)
+//     const key = url.pathname + url.search;
+//     const ten_minutes = 600_000;
+//     let bodykey = `__body__${key}`
+//     let headerskey = `__headers__${key}`
+//     let body = KVCache.get(bodykey);
+//     if (body) {
+//         let headers = KVCache.get(headerskey);
+//         if (headers) {
+//             return new Response(body.body, {headers: await headers.json()})
+//         }
+//     }
+//     await next();
+//     let [body1, body2] = c.res.body.tee();
+//     c.executionCtx.waitUntil(streamToString(body1).then(value => {
+//         KVCache.set(bodykey, value, ten_minutes);
+//     }));
+//     const headers = Object.fromEntries(c.res.headers.entries())
+//     KVCache.set(headerskey, JSON.stringify(headers), ten_minutes);
+//     c.res = new Response(body2, c.res)
+// }
 
 export function createServer() {
     const app = new Hono({ router: new LinearRouter() })
+
     app.use('*', logger());
+
     app.use('*', cors());
+
     app.use('*', async (c, next) => {
         await next();
         c.header('FASTLY_SERVICE_VERSION', env('FASTLY_SERVICE_VERSION'));
         c.header("x-compress-hint", "on");
     });
-    app.use('*', async (c, next) => {
-        const url = new URL(c.req.url);
-        if (url.hostname.startsWith('mod.')) {
-            url.searchParams.set('module', '');
-            c.req = new Request(url, c.req);
-        }
-        await next();
-    });
+
+    // app.use('*', async (c, next) => {
+    //     const url = new URL(c.req.url);
+    //     if (url.hostname.startsWith('mod.')) {
+    //         url.searchParams.set('module', '');
+    //         c.req = new Request(url, c.req);
+    //     }
+    //     await next();
+    // });
+
     // app.use('*', async (c) => {
     //     const res = await get('public', c.req);
     //     if (res) {
     //         return res;
     //     }
     // });
-    app.get('/', readThroughCache, serveMainPage);
-    app.get('/favicon.ico', readThroughCache, c => c.body(favicon, {
+
+    app.get('/',
+    // readThroughCache,
+    serveMainPage);
+
+    app.get('/favicon.ico',
+    // readThroughCache,
+    c => c.body(favicon, {
         headers: {
             'content-type': 'image/svg+xml',
             'cache-control': 'public, max-age=31536000',
@@ -92,7 +103,9 @@ export function createServer() {
             'x-compress-hint': 'on',
         }
     }));
-    app.get('/favicon.svg', readThroughCache, c => c.body(favicon, {
+    app.get('/favicon.svg',
+    // readThroughCache,
+    c => c.body(favicon, {
         headers: {
             'content-type': 'image/svg+xml',
             'cache-control': 'public, max-age=31536000',
@@ -101,7 +114,9 @@ export function createServer() {
             'x-compress-hint': 'on',
         }
     }));
+
     // app.get('/api/stats', serveStats);
+
     app.use('*', redirectLegacyURLs);
 
     app.use(
@@ -113,7 +128,7 @@ export function createServer() {
         validatePackagePathname,
         validatePackageName,
         validatePackageVersion,
-        readThroughCache,
+        // readThroughCache,
         async (c) => {
             const path = new URL(c.req.url).pathname;
             let response;
@@ -149,7 +164,7 @@ export function createServer() {
         validatePackageName,
         validatePackageVersion,
         validateFilename,
-        readThroughCache,
+        // readThroughCache,
         async (c, next) => {
             if (c.req.meta) {
                 const path = new URL(c.req.url).pathname;
@@ -170,5 +185,6 @@ export function createServer() {
             }
         }
     );
+    
     return app;
 }
