@@ -1,11 +1,11 @@
 /// <reference types="@fastly/js-compute" />
+
 import { env } from 'fastly:env';
-// import { KVCache } from 'fastly:kv-cache';
+import { SimpleCache } from 'fastly:cache';
 import { LinearRouter } from 'hono/router/linear-router'
 import { Hono } from 'hono'
 import { logger } from 'hono/logger'
 import { cors } from 'hono/cors'
-// import { get } from "@jakechampion/c-at-e-file-server";
 import { serveMainPage } from "./actions/serveMainPage.js";
 import { serveFileMetadata } from './actions/serveFileMetadata.js';
 import { serveDirectoryMetadata } from './actions/serveDirectoryMetadata.js';
@@ -22,42 +22,59 @@ import { serveFileBrowser } from "./actions/serveFileBrowser.js";
 import favicon from './favicon.js'
 
 // TODO: Implement ReadableStream getIterator() and [@@asyncIterator]() methods
-// async function streamToString(stream) {
-// 	const decoder = new TextDecoder();
-// 	let string = '';
-// 	let reader = stream.getReader()
-// 	// eslint-disable-next-line no-constant-condition
-// 	while (true) {
-// 		const { done, value } = await reader.read();
-// 		if (done) {
-// 			return string;
-// 		}
-// 		string += decoder.decode(value)
-// 	}
-// }
+async function streamToString(stream) {
+	const decoder = new TextDecoder();
+	let string = '';
+	let reader = stream.getReader()
+	// eslint-disable-next-line no-constant-condition
+	while (true) {
+		const { done, value } = await reader.read();
+		if (done) {
+			return string;
+		}
+		string += decoder.decode(value)
+	}
+}
 
-// async function readThroughCache(c, next) {
-//     const url = new URL(c.req.url)
-//     const key = url.pathname + url.search;
-//     const ten_minutes = 600_000;
-//     let bodykey = `__body__${key}`
-//     let headerskey = `__headers__${key}`
-//     let body = KVCache.get(bodykey);
-//     if (body) {
-//         let headers = KVCache.get(headerskey);
-//         if (headers) {
-//             return new Response(body.body, {headers: await headers.json()})
-//         }
-//     }
-//     await next();
-//     let [body1, body2] = c.res.body.tee();
-//     c.executionCtx.waitUntil(streamToString(body1).then(value => {
-//         KVCache.set(bodykey, value, ten_minutes);
-//     }));
-//     const headers = Object.fromEntries(c.res.headers.entries())
-//     KVCache.set(headerskey, JSON.stringify(headers), ten_minutes);
-//     c.res = new Response(body2, c.res)
-// }
+function isRunningLocally() {
+    return env('FASTLY_SERVICE_VERSION') == '';
+}
+
+async function readThroughCache(c, next) {
+    if (isRunningLocally()) {
+        return await next()
+    }
+    const url = new URL(c.req.url)
+    const key = url.pathname + url.search;
+    const ten_minutes = 600_000;
+    let bodykey = `__body__${key}`
+    let headerskey = `__headers__${key}`
+    let body = SimpleCache.get(bodykey);
+    if (body) {
+        let headers = SimpleCache.get(headerskey);
+        if (headers) {
+            return new Response(body.body, {headers: await headers.json()})
+        }
+    }
+    await next();
+    let [body1, body2] = c.res.body.tee();
+    c.executionCtx.waitUntil(streamToString(body1).then(value => {
+        return SimpleCache.getOrSet(bodykey, () => {
+            return {
+                value,
+                ttl: ten_minutes
+            }
+        });
+    }));
+    const headers = Object.fromEntries(c.res.headers.entries())
+    c.executionCtx.waitUntil(SimpleCache.getOrSet(headerskey, () => {
+        return {
+            value: JSON.stringify(headers),
+            ttl: ten_minutes
+        };
+    }));
+    c.res = new Response(body2, c.res)
+}
 
 export function createServer() {
     const app = new Hono({ router: new LinearRouter() })
@@ -89,11 +106,11 @@ export function createServer() {
     // });
 
     app.get('/',
-    // readThroughCache,
+    readThroughCache,
     serveMainPage);
 
     app.get('/favicon.ico',
-    // readThroughCache,
+    readThroughCache,
     c => c.body(favicon, {
         headers: {
             'content-type': 'image/svg+xml',
@@ -104,7 +121,7 @@ export function createServer() {
         }
     }));
     app.get('/favicon.svg',
-    // readThroughCache,
+    readThroughCache,
     c => c.body(favicon, {
         headers: {
             'content-type': 'image/svg+xml',
@@ -128,7 +145,7 @@ export function createServer() {
         validatePackagePathname,
         validatePackageName,
         validatePackageVersion,
-        // readThroughCache,
+        readThroughCache,
         async (c) => {
             const path = new URL(c.req.url).pathname;
             let response;
@@ -164,7 +181,7 @@ export function createServer() {
         validatePackageName,
         validatePackageVersion,
         validateFilename,
-        // readThroughCache,
+        readThroughCache,
         async (c, next) => {
             if (c.req.meta) {
                 const path = new URL(c.req.url).pathname;
