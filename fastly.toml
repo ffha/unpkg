@@ -5,8 +5,8 @@ authors = [""]
 description = ""
 language = "javascript"
 manifest_version = 2
-name = "Hono"
-service_id = "ySx2d98nExF6vIlY66PNq0"
+name = "unpkg"
+service_id = "i0u7jUlgcEe5gyXwU5xTt0"
 
 [local_server]
 
