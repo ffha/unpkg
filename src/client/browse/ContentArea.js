@@ -1,4 +1,4 @@
-import { html, unsafeHTML } from "@worker-tools/html";
+import { html } from "@worker-tools/html";
 
 export function ContentArea({ children }) {
   return (

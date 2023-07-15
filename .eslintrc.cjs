@@ -4,6 +4,10 @@ module.exports = {
         "serviceworker": true,
     },
     "extends": "eslint:recommended",
+    "globals": {
+        "crypto": true,
+        "DecompressionStream": true,
+    },
     "overrides": [
     ],
     "parserOptions": {

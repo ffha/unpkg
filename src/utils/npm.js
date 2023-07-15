@@ -33,7 +33,7 @@ async function fetchPackageInfo(packageName) {
     return null;
   }
 
-  const content = await res.text();
+  // const content = await res.text();
 
   // console.error(
   //   'Error fetching info for %s (status: %s)',
