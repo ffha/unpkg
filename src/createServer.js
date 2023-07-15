@@ -87,6 +87,7 @@ export function createServer() {
         await next();
         c.header('FASTLY_SERVICE_VERSION', env('FASTLY_SERVICE_VERSION'));
         c.header("x-compress-hint", "on");
+        c.header("x-trailer-server-timing", "rtt,timestamp,retrans");
     });
 
     // app.use('*', async (c, next) => {
