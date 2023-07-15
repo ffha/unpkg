@@ -53,7 +53,9 @@ async function readThroughCache(c, next) {
     if (body) {
         let headers = SimpleCache.get(headerskey);
         if (headers) {
-            return new Response(body.body, {headers: await headers.json()})
+            headers = await headers.json();
+            headers['server-timing'] = "hit-state;desc=hit";
+            return new Response(body.body, {headers})
         }
     }
     await next();
@@ -74,6 +76,7 @@ async function readThroughCache(c, next) {
         };
     }));
     c.res = new Response(body2, c.res)
+    c.res.headers.append('server-timing',  "hit-state;desc=miss");
 }
 
 export function createServer() {
@@ -84,7 +87,10 @@ export function createServer() {
     app.use('*', cors());
 
     app.use('*', async (c, next) => {
+        c.res.headers.append('server-timing', "time-start-msec;dur=" + performance.now())
         await next();
+        c.res.headers.append('server-timing', "time-elapsed;dur=" + performance.now())
+        c.res.headers.append('server-timing', "fastly-pop;desc=" + (env("FASTLY_POP") || 'local'));
         c.header('FASTLY_SERVICE_VERSION', env('FASTLY_SERVICE_VERSION'));
         c.header("x-compress-hint", "on");
         c.header("x-trailer-server-timing", "rtt,timestamp,retrans");
