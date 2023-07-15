@@ -9,7 +9,8 @@
   "dependencies": {
     "@fastly/js-compute": "^3.1.1",
     "@jakechampion/c-at-e-file-server": "^0.0.2-main",
-    "hono": "^3.3.0"
+    "hono": "^3.3.0",
+    "util": "^0.12.5"
   },
   "devDependencies": {
     "@jakechampion/c-at-e-file-server-cli": "^0.0.2-main",
