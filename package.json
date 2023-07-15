@@ -3,24 +3,14 @@
   "scripts": {
     "dev": "fastly compute serve --verbose",
     "build": "js-compute-runtime src/index.js",
-    "deploy": "fastly compute publish",
-    "postinstall": "patch-package"
+    "deploy": "fastly compute publish"
   },
   "dependencies": {
     "@fastly/js-compute": "^3.1.1",
     "@jakechampion/c-at-e-file-server": "^0.0.2-main",
-    "hono": "^3.3.0",
-    "util": "^0.12.5"
+    "hono": "^3.3.0"
   },
   "devDependencies": {
-    "@babel/plugin-proposal-class-properties": "^7.18.6",
-    "@babel/plugin-proposal-nullish-coalescing-operator": "^7.18.6",
-    "@babel/plugin-proposal-optional-chaining": "^7.21.0",
-    "@babel/plugin-syntax-dynamic-import": "^7.8.3",
-    "@babel/plugin-syntax-export-default-from": "^7.22.5",
-    "@babel/plugin-syntax-export-namespace-from": "^7.8.3",
-    "@babel/plugin-syntax-import-meta": "^7.10.4",
-    "@babel/standalone": "^7.22.9",
     "@jakechampion/c-at-e-file-server-cli": "^0.0.2-main",
     "@worker-tools/html": "^2.0.0-pre.13",
     "date-fns": "^2.30.0",
@@ -29,12 +19,8 @@
     "etag": "^1.8.1",
     "highlight.js": "^11.8.0",
     "mrmime": "^1.0.1",
-    "patch-package": "^7.0.2",
     "pretty-bytes": "^6.1.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
     "sort-by": "^1.2.0",
-    "sri-toolbox": "^0.2.0",
     "validate-npm-package-name": "^5.0.0"
   }
 }
