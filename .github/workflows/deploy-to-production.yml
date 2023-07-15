@@ -16,6 +16,6 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           cli_version: '10.2.2'
-      - run: yarn
+      - run: npm ci
 
-      - run: fastly compute publish --verbose -i --service-id 35VfiGSqO4qK9yI0i7ZUyC --token ${{ secrets.FASTLY_API_KEY }}
+      - run: fastly compute publish --verbose -i --token ${{ secrets.FASTLY_API_KEY }}
