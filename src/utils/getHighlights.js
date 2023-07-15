@@ -26,7 +26,7 @@ const extLanguages = {
 
 function getLanguage(file) {
   // Try to guess the language based on the file extension.
-  const ext = extname(file).substr(1);
+  const ext = extname(file);
   let language = extLanguages[ext];
   if (language) {
     return language;
