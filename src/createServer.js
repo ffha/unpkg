@@ -94,7 +94,7 @@ export function createServer() {
         c.header('FASTLY_SERVICE_VERSION', env('FASTLY_SERVICE_VERSION'));
         c.header("x-compress-hint", "on");
         c.header("x-trailer-server-timing", "rtt,timestamp,retrans");
-	c.headers("alt-svc", 'h3=":443";ma=86400,h3-29=":443";ma=86400,h3-27=":443";ma=86400');
+        c.header("alt-svc", 'h3=":443";ma=86400,h3-29=":443";ma=86400,h3-27=":443";ma=86400');
     });
 
     // app.use('*', async (c, next) => {
