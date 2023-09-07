@@ -21,21 +21,6 @@ import { serveDirectoryBrowser } from "./actions/serveDirectoryBrowser.js";
 import { serveFileBrowser } from "./actions/serveFileBrowser.js";
 import favicon from './favicon.js'
 
-// TODO: Implement ReadableStream getIterator() and [@@asyncIterator]() methods
-async function streamToString(stream) {
-	const decoder = new TextDecoder();
-	let string = '';
-	let reader = stream.getReader()
-	// eslint-disable-next-line no-constant-condition
-	while (true) {
-		const { done, value } = await reader.read();
-		if (done) {
-			return string;
-		}
-		string += decoder.decode(value)
-	}
-}
-
 function isRunningLocally() {
     return env('FASTLY_SERVICE_VERSION') == '';
 }
@@ -49,38 +34,46 @@ async function readThroughCache(c, next) {
     const ten_minutes = 600_000;
     let bodykey = `__body__${key}`
     let headerskey = `__headers__${key}`
-    let body = SimpleCache.get(bodykey);
-    if (body) {
-        let headers = SimpleCache.get(headerskey);
-        if (headers) {
-            headers = await headers.json();
-            headers['server-timing'] = "hit-state;desc=hit";
-            return new Response(body.body, {headers})
+    try {
+        let body = SimpleCache.get(bodykey);
+        if (body) {
+            let headers = SimpleCache.get(headerskey);
+            if (headers) {
+                headers = await headers.json();
+                headers['server-timing'] = "hit-state;desc=hit";
+                return new Response(body.body, {headers})
+            }
         }
+    } catch {
+        //
     }
     await next();
     let [body1, body2] = c.res.body.tee();
-    c.executionCtx.waitUntil(streamToString(body1).then(value => {
-        return SimpleCache.getOrSet(bodykey, () => {
-            return {
-                value,
-                ttl: ten_minutes
-            }
-        });
+    let res1 = new Response(body1, c.res);
+    let res2 = new Response(body2, c.res);
+    c.executionCtx.waitUntil(SimpleCache.getOrSet(bodykey, async () => {
+        return {
+            value: await res1.arrayBuffer(),
+            ttl: ten_minutes
+        }
     }));
-    const headers = Object.fromEntries(c.res.headers.entries())
     c.executionCtx.waitUntil(SimpleCache.getOrSet(headerskey, () => {
         return {
-            value: JSON.stringify(headers),
+            value: JSON.stringify(Object.fromEntries(res1.headers.entries())),
             ttl: ten_minutes
-        };
+        }
     }));
-    c.res = new Response(body2, c.res)
+    c.res = res2
     c.res.headers.append('server-timing',  "hit-state;desc=miss");
 }
 
 export function createServer() {
     const app = new Hono({ router: new LinearRouter() })
+
+    app.onError((error, c) => {
+        console.error('Internal App Error:', error, error.stack, error.message);
+        return c.text('Internal Server Error', 500)
+    });
 
     app.use('*', logger());
 
@@ -96,22 +89,6 @@ export function createServer() {
         c.header("x-trailer-server-timing", "rtt,timestamp,retrans");
         c.header("alt-svc", 'h3=":443";ma=86400,h3-29=":443";ma=86400,h3-27=":443";ma=86400');
     });
-
-    // app.use('*', async (c, next) => {
-    //     const url = new URL(c.req.url);
-    //     if (url.hostname.startsWith('mod.')) {
-    //         url.searchParams.set('module', '');
-    //         c.req = new Request(url, c.req);
-    //     }
-    //     await next();
-    // });
-
-    // app.use('*', async (c) => {
-    //     const res = await get('public', c.req);
-    //     if (res) {
-    //         return res;
-    //     }
-    // });
 
     app.get('/',
     readThroughCache,

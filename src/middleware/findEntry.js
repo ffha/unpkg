@@ -44,9 +44,9 @@ function indexRedirect(c, entry) {
  * Follows node's resolution algorithm.
  * https://nodejs.org/api/modules.html#modules_all_together
  */
-async function searchEntries(stream, filename) {
+async function searchEntries(arrayBuffer, filename) {
   // filename = /some/file/name.js or /some/dir/name
-  const extractor = new Untar(stream);
+  const extractor = new Untar(arrayBuffer);
   let file = extractor.getFile(filename);
   if (!file) {
     const jsEntryFilename = `${filename}.js`;
@@ -75,9 +75,9 @@ async function searchEntries(stream, filename) {
  * Redirect to the "index" file if a directory was requested.
  */
 export async function findEntry(c, next) {
-  const stream = await getPackage(c.req.packageName, c.req.packageVersion);
+  const arrayBuffer = await getPackage(c.req.packageName, c.req.packageVersion);
   const { foundEntry: entry, matchingEntries: entries } = await searchEntries(
-    stream,
+    arrayBuffer,
     c.req.filename
   );
 

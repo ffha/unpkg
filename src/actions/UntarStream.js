@@ -1,6 +1,6 @@
 export class UntarStream {
     constructor(arrayBuffer) {
-        this._bufferView = new DataView(arrayBuffer);
+        this._bufferView = new DataView(arrayBuffer || new ArrayBuffer(0));
         this._position = 0;
     }
     readString(charCount) {
