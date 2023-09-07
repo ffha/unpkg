@@ -4,7 +4,7 @@ import { etag } from './etag.js';
 function extname(path) {
   return path.split('.').pop();
 }
-export function serveFile(c) {
+export async function serveFile(c) {
   const tags = ['file'];
 
   const ext = extname(c.req.entry.path).substr(1);
@@ -18,7 +18,7 @@ export function serveFile(c) {
       'Content-Length': c.req.entry.size,
       'Cache-Control': 'public, max-age=31536000', // 1 year
       'Last-Modified': c.req.entry.lastModified,
-      ETag: etag(c.req.entry.content),
+      ETag: await etag(c.req.entry.content),
       'Surrogate-Key': tags.join(', ')
     }
   });
