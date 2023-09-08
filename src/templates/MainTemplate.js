@@ -20,9 +20,9 @@ export default function MainTemplate({
   </script>
   <meta char-set='utf-8' />
   <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1' />
-  ${description ? html`<meta name='description' content=${description} />` : ''}
+  ${description ? html`<meta name='description' content='${description}' />` : ''}
   <meta name='viewport' content='width=device-width,initial-scale=1,maximum-scale=1' />
-  <meta name='timestamp' content=${new Date().toISOString() }/>
+  <meta name='timestamp' content='${new Date().toISOString() }'/>
   ${favicon ? html`<link rel='shortcut icon' href="${favicon}" type="image/svg+xml"/>` : ''}
   <title>${title}</title>
 </head>
