@@ -6,7 +6,7 @@ compute_domains = [
   }
 ]
 
-vcl_name = "staging.polyfill.io"
+vcl_name = "staging-unpkg.jakechampion.name"
 vcl_backends = [
   {
     name                  = "compute_at_edge"
@@ -39,6 +39,6 @@ vcl_backends = [
 
 vcl_domains = [
   {
-    name = "staging.polyfill.io"
+    name = "staging-unpkg.jakechampion.name"
   }
 ]
