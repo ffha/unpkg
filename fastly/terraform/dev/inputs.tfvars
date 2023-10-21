@@ -1,8 +1,8 @@
-compute_name = "dev-unpkg.edgecompute.app"
+compute_name = "development-unpkg.edgecompute.app"
 
 compute_domains = [
   {
-    name = "dev-unpkg.edgecompute.app"
+    name = "development-unpkg.edgecompute.app"
   }
 ]
 
@@ -10,7 +10,7 @@ vcl_name = "dev-unpkg.jakechampion.name"
 vcl_backends = [
   {
     name                  = "compute_at_edge"
-    address               = "dev-unpkg.edgecompute.app"
+    address               = "development-unpkg.edgecompute.app"
     port                  = 443
     ssl_cert_hostname     = "*.edgecompute.app"
     auto_loadbalance      = false
@@ -18,7 +18,7 @@ vcl_backends = [
     first_byte_timeout    = 120000
     between_bytes_timeout = 120000
     error_threshold       = 0
-    override_host         = "dev-unpkg.edgecompute.app"
+    override_host         = "development-unpkg.edgecompute.app"
     use_ssl               = true
   },
   {
