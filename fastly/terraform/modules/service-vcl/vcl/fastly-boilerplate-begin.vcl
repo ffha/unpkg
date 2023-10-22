@@ -1,4 +1,6 @@
 sub vcl_recv {
+#FASTLY RECV
+
 	# Give every request a unique ID.
 	if (!req.http.X-Request-Id) {
 		set req.http.X-Request-Id = digest.hash_sha256(now randomstr(64) req.http.host req.url req.http.Fastly-Client-IP server.identity);
