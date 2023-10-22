@@ -47,7 +47,7 @@ sub debug_info_miss {
 	"node: cluster_" + if(fastly_info.is_cluster_shield, "shield", "edge") + ", " +
 	"state: " + fastly_info.state + ", " +
 	"host: " + bereq.http.host + ", " +
-	"backend: " + bereq.backend + ", " +
+	"backend: " + req.backend + ", " +
 	"path: " + bereq.url +
 	")";
 }
