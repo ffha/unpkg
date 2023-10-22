@@ -101,7 +101,7 @@ sub vcl_deliver {
 	add resp.http.Server-Timing = fastly_info.state {", fastly;desc="Edge time";dur="} time.elapsed.msec;
 
 	if (req.http.Fastly-Debug) {
-		set resp.http.Debug-Backend = req.http.Debug-Backend;
+		set resp.http.Debug-Backend = req.req.backend;
 		set resp.http.Debug-Host = req.http.Host;
 		set resp.http.Debug-Fastly-Restarts = req.restarts;
 		set resp.http.Debug-Orig-URL = req.http.Orig-URL;
