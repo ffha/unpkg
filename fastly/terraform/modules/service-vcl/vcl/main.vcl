@@ -21,11 +21,11 @@ sub vcl_recv {
 	# on the eventual client response, allowing the client to switch to HTTP/3 for future requests.
 	h3.alt_svc();
 
-	if (req.restarts == 0) {
-		set req.backend = F_compute_at_edge;
-	} else {
+	# if (req.restarts == 0) {
+	# 	set req.backend = F_compute_at_edge;
+	# } else {
 		set req.backend = F_fly;
-	}
+	# }
 
 	if (req.method != "HEAD" && req.method != "GET" && req.method != "FASTLYPURGE") {
 		return (pass);
