@@ -19,6 +19,7 @@ vcl_backends = [
     between_bytes_timeout = 120000
     error_threshold       = 0
     override_host         = "unpkg.edgecompute.app"
+    ssl_sni_hostname      = "unpkg.edgecompute.app"
     use_ssl               = true
   },
   {
@@ -32,6 +33,7 @@ vcl_backends = [
     between_bytes_timeout = 120000
     error_threshold       = 0
     override_host         = "unpkg.fly.dev"
+    ssl_sni_hostname      = "unpkg.fly.dev"
     use_ssl               = true
   }
 ]

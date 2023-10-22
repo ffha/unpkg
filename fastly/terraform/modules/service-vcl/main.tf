@@ -16,6 +16,7 @@ resource "fastly_service_vcl" "app" {
       between_bytes_timeout = backend.value["between_bytes_timeout"]
       error_threshold       = backend.value["error_threshold"]
       override_host         = backend.value["override_host"]
+      ssl_sni_hostname      = backend.value["ssl_sni_hostname"]
       use_ssl               = backend.value["use_ssl"]
     }
   }
