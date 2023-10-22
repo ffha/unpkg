@@ -19,6 +19,7 @@ vcl_backends = [
     between_bytes_timeout = 120000
     error_threshold       = 0
     override_host         = "unpkg.edgecompute.app"
+    use_ssl               = true
   },
   {
     name                  = "fly"

@@ -14,6 +14,7 @@ variable "vcl_backends" {
     between_bytes_timeout = number
     error_threshold       = number
     override_host         = string
+    use_ssl               = bool
   }))
 }
 
