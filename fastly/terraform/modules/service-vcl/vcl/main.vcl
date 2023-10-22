@@ -2,6 +2,7 @@
 include "breadcrumbs.vcl";
 
 sub vcl_recv {
+	call debug_info_recv;
 	#FASTLY RECV
 
 	# Give every request a unique ID.
@@ -20,10 +21,6 @@ sub vcl_recv {
 	# on the eventual client response, allowing the client to switch to HTTP/3 for future requests.
 	h3.alt_svc();
 
-	if (req.http.Fastly-Debug) {
-		call breadcrumb_recv;
-	}
-
 	if (req.restarts == 0) {
 		set req.backend = F_compute_at_edge;
 	} else {
@@ -38,35 +35,31 @@ sub vcl_recv {
 }
 
 sub vcl_hash {
-	if (req.http.Fastly-Debug) {
-		call breadcrumb_hash;
-	}
-}
+	#FASTLY hash
 
-sub vcl_hit {
-#FASTLY hit
-/*
-	if (!obj.cacheable) {
-		return(pass);
-	} */
-	return (deliver);
+	set req.hash += req.url;
+	set req.hash += req.http.host;
+
+	call debug_info_hash;
+
+	return(hash);
 }
 
 sub vcl_miss {
 	#FASTLY miss
-	if (req.http.Fastly-Debug) {
-		call breadcrumb_miss;
-	}
+	call debug_info_miss;
 	return (fetch);
 }
 
 sub vcl_pass {
-	if (req.http.Fastly-Debug) {
-		call breadcrumb_pass;
-	}
+	#FASTLY pass
+	call debug_info_pass;
 }
 
 sub vcl_fetch {
+	#FASTLY fetch
+	call debug_info_fetch;
+
 	# Serve stale objects on a backend error.
 	if (http_status_matches(beresp.status, "500,502,503,504")) {
 		if (stale.exists) {
@@ -78,51 +71,26 @@ sub vcl_fetch {
 		}
 	}
 
-	#FASTLY fetch
 
 	if (req.restarts > 0) {
 		set beresp.http.Fastly-Restarts = req.restarts;
 	}
 
 
-	if (req.http.Fastly-Debug) {
-		call breadcrumb_fetch;
-	}
 	return (deliver);
 }
 
 sub vcl_deliver {
-#FASTLY deliver
+	call debug_info_deliver;
+	call debug_info_send;
 
-	if (req.http.Fastly-Debug) {
-		call breadcrumb_deliver;
-	}
-
-	add resp.http.Server-Timing = fastly_info.state {", fastly;desc="Edge time";dur="} time.elapsed.msec;
-
-	if (req.http.Fastly-Debug) {
-		set resp.http.Debug-Backend = req.backend;
-		set resp.http.Debug-Host = req.http.Host;
-		set resp.http.Debug-Fastly-Restarts = req.restarts;
-		set resp.http.Debug-Orig-URL = req.http.Orig-URL;
-		set resp.http.Debug-VCL-Route = req.http.X-VCL-Route;
-	} else {
-		unset resp.http.Server;
-		unset resp.http.Via;
-		unset resp.http.X-Cache;
-		unset resp.http.X-Cache-Hits;
-		unset resp.http.X-Served-By;
-		unset resp.http.X-Timer;
-		unset resp.http.Fastly-Restarts;
-		unset resp.http.X-PreFetch-Pass;
-		unset resp.http.X-PreFetch-Miss;
-		unset resp.http.X-PostFetch;
-	}
+	#FASTLY deliver
 	return (deliver);
 }
 
 sub vcl_error {
 	#FASTLY error
+	call debug_info_error;
 
 	if (http_status_matches(obj.status, "500,502,503,504")) {
 		if (stale.exists) {
@@ -132,10 +100,6 @@ sub vcl_error {
 		}
 		return(deliver);
 	}
-}
-
-sub vcl_pass {
-#FASTLY pass
 }
 
 sub vcl_log {
