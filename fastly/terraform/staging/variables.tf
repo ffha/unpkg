@@ -17,6 +17,7 @@ variable "vcl_backends" {
     address               = string
     port                  = number
     ssl_cert_hostname     = string
+    ssl_sni_hostname      = string
     auto_loadbalance      = bool
     connect_timeout       = number
     first_byte_timeout    = number
