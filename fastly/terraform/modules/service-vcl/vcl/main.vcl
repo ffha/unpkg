@@ -1,9 +1,19 @@
 # The Fastly VCL boilerplate.
-include "fastly-boilerplate-begin.vcl";
-
 include "breadcrumbs.vcl";
 
 sub vcl_recv {
+	#FASTLY RECV
+
+	# Give every request a unique ID.
+	if (!req.http.X-Request-Id) {
+		set req.http.X-Request-Id = digest.hash_sha256(now randomstr(64) req.http.host req.url req.http.Fastly-Client-IP server.identity);
+	}
+
+	# Enable API key authentication for URL purge requests
+	if ( req.method == "FASTLYPURGE" ) {
+		set req.http.Fastly-Purge-Requires-Auth = "1";
+	}
+
 	# Sets the alt-svc header on the client response.
 	# When a client connection is using a version of HTTP older than HTTP/3,
 	# invoking this function triggers Fastly to advertise HTTP/3 support,
@@ -13,11 +23,18 @@ sub vcl_recv {
 	if (req.http.Fastly-Debug) {
 		call breadcrumb_recv;
 	}
+
 	if (req.restarts == 0) {
 		set req.backend = F_compute_at_edge;
 	} else {
 		set req.backend = F_fly;
 	}
+
+	if (req.method != "HEAD" && req.method != "GET" && req.method != "FASTLYPURGE") {
+		return (pass);
+	}
+
+	return (lookup);
 }
 
 sub vcl_hash {
@@ -26,10 +43,21 @@ sub vcl_hash {
 	}
 }
 
+sub vcl_hit {
+#FASTLY hit
+/*
+	if (!obj.cacheable) {
+		return(pass);
+	} */
+	return (deliver);
+}
+
 sub vcl_miss {
+	#FASTLY miss
 	if (req.http.Fastly-Debug) {
 		call breadcrumb_miss;
 	}
+	return (fetch);
 }
 
 sub vcl_pass {
@@ -39,33 +67,40 @@ sub vcl_pass {
 }
 
 sub vcl_fetch {
+	# Serve stale objects on a backend error.
+	if (http_status_matches(beresp.status, "500,502,503,504")) {
+		if (stale.exists) {
+			return(deliver_stale);
+		}
+
+		if (req.restarts < 1 && (req.method == "GET" || req.method == "HEAD")) {
+			restart;
+		}
+
+		error 503;
+	}
+
+	#FASTLY fetch
+
+	if (req.restarts > 0) {
+		set beresp.http.Fastly-Restarts = req.restarts;
+	}
+
+
 	if (req.http.Fastly-Debug) {
 		call breadcrumb_fetch;
 	}
-
-	set beresp.http.Timing-Allow-Origin = "*";
-
-	# We end up here if
-	# - The origin is HEALTHY; and
-	# - It returned a valid HTTP response
-	#
-	# We may still not want to *use* that response, if it's an HTTP error,
-	# so that's the case we need to catch here.
-	if (beresp.status >= 500 && beresp.status < 600) {
-		# There's a stale version available! Serve it.
-		if (stale.exists) {
-			return(deliver_stale);
-		} else if (req.restarts == 0) {
-			restart;
-		}
-		# Cache the error for 1s to allow it to be used for any collapsed requests
-		# set beresp.cacheable = true;
-		# set beresp.ttl = 1s;
-		return(deliver);
-	}
+	return (deliver);
 }
 
 sub vcl_deliver {
+	# Serve stale objects on a backend error.
+	if (http_status_matches(resp.status, "500,502,503,504") && stale.exists) {
+		restart;
+	}
+
+#FASTLY deliver
+
 	if (req.http.Fastly-Debug) {
 		call breadcrumb_deliver;
 	}
@@ -90,10 +125,13 @@ sub vcl_deliver {
 		unset resp.http.X-PreFetch-Miss;
 		unset resp.http.X-PostFetch;
 	}
+	return (deliver);
 }
 
 sub vcl_error {
-	if (obj.status >= 500 && obj.status < 600) {
+	#FASTLY error
+
+	if (http_status_matches(obj.status, "500,502,503,504")) {
 		if (stale.exists) {
 			return(deliver_stale);
 		} else if (req.restarts == 0) {
@@ -103,5 +141,10 @@ sub vcl_error {
 	}
 }
 
-# Finally include the last bit of VCL, this _must_ be last!
-include "fastly-boilerplate-end.vcl";
+sub vcl_pass {
+#FASTLY pass
+}
+
+sub vcl_log {
+#FASTLY log
+}

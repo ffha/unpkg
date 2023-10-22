@@ -34,16 +34,6 @@ resource "fastly_service_vcl" "app" {
   }
 
   vcl {
-    name    = "fastly-boilerplate-begin.vcl"
-    content = file("${path.module}/vcl/fastly-boilerplate-begin.vcl")
-  }
-
-  vcl {
-    name    = "fastly-boilerplate-end.vcl"
-    content = file("${path.module}/vcl/fastly-boilerplate-end.vcl")
-  }
-
-  vcl {
     name    = "breadcrumbs.vcl"
     content = file("${path.module}/vcl/breadcrumbs.vcl")
   }
