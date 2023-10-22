@@ -25,6 +25,7 @@ sub debug_info_recv {
 		"node: cluster_edge, " +
 		"state: " + fastly_info.state + ", " +
 		"host: " + req.http.host + ", " +
+		"backend: " + req.backend + ", " +
 		"path: " + req.url +
 		")";
 }
@@ -35,6 +36,7 @@ sub debug_info_hash {
 	"node: cluster_edge, " +
 	"state: " + fastly_info.state + ", " +
 	"host: " + req.http.host + ", " +
+	"backend: " + req.backend + ", " +
 	"path: " + req.url +
 	")";
 }
@@ -45,6 +47,7 @@ sub debug_info_miss {
 	"node: cluster_" + if(fastly_info.is_cluster_shield, "shield", "edge") + ", " +
 	"state: " + fastly_info.state + ", " +
 	"host: " + bereq.http.host + ", " +
+	"backend: " + bereq.backend + ", " +
 	"path: " + bereq.url +
 	")";
 }
@@ -55,6 +58,7 @@ sub debug_info_pass {
 	"node: cluster_" + if(fastly_info.is_cluster_shield, "shield", "edge") + ", " +
 	"state: " + fastly_info.state + ", " +
 	"host: " + req.http.host + ", " +
+	"backend: " + req.backend + ", " +
 	"path: " + req.url + ", " +
 	")";
 }
@@ -68,6 +72,7 @@ sub debug_info_fetch {
 	"node: cluster_" + if(fastly_info.is_cluster_shield, "shield", "edge") + ", " +
 	"state: " + fastly_info.state + ", " +
 	"host: " + req.http.host + ", " +
+	"backend: " + req.backend + ", " +
 	"path: " + req.url + ", " +
 	"status: " + beresp.status + ", " +
 	"stale: " + if(stale.exists, "exists", "none") + ", " +
@@ -84,6 +89,7 @@ sub debug_info_error {
 	"node: cluster_" + if(fastly_info.is_cluster_shield, "shield", "edge") + ", " +
 	"state: " + fastly_info.state + ", " +
 	"host: " + req.http.host + ", " +
+	"backend: " + req.backend.name + ", " +
 	"path: " + req.url + ", " +
 	"status: " + obj.status + ", " +
 	"stale: " + if(stale.exists, "exists", "none") + ", " +
@@ -119,6 +125,7 @@ sub debug_info_deliver {
 		"node: cluster_shield, " +
 		"state: " + fastly_info.state + ", " +
 		"host: " + req.http.host + ", " +
+		"backend: " + req.backend.name + ", " +
 		"path: " + req.url + ", " +
 		"status: " + resp.status + ", " +
 		"cacheable: true, " +
@@ -151,6 +158,7 @@ sub debug_info_deliver {
 	"node: cluster_edge, " +
 	"state: " + fastly_info.state + ", " +
 	"host: " + req.http.host + ", " +
+	"backend: " + req.backend.name + ", " +
 	"path: " + req.url + ", " +
 	"status: " + resp.status + ", " +
 	"stale: " + if(stale.exists, "exists", "none") +
