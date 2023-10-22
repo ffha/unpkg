@@ -59,8 +59,8 @@ sub vcl_fetch {
 			restart;
 		}
 		# Cache the error for 1s to allow it to be used for any collapsed requests
-		set beresp.cacheable = true;
-		set beresp.ttl = 1s;
+		# set beresp.cacheable = true;
+		# set beresp.ttl = 1s;
 		return(deliver);
 	}
 }
