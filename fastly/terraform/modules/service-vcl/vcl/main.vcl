@@ -76,8 +76,6 @@ sub vcl_fetch {
 		if (req.restarts < 1 && (req.method == "GET" || req.method == "HEAD")) {
 			restart;
 		}
-
-		error 503;
 	}
 
 	#FASTLY fetch
@@ -94,11 +92,6 @@ sub vcl_fetch {
 }
 
 sub vcl_deliver {
-	# Serve stale objects on a backend error.
-	if (http_status_matches(resp.status, "500,502,503,504") && stale.exists) {
-		restart;
-	}
-
 #FASTLY deliver
 
 	if (req.http.Fastly-Debug) {
