@@ -1,4 +1,4 @@
-import { streamToArrayBuffer } from "./streamToArrayBuffer";
+import { streamToArrayBuffer } from "./streamToArrayBuffer.js";
 
 const npmRegistryURL = 'https://registry.npmjs.org';
 

@@ -21,11 +21,11 @@ async function findEntry(stream, filename) {
 }
 
 export async function serveFileBrowser(c) {
-  const stream = await getPackage(c.req.packageName, c.req.packageVersion);
-  const entry = await findEntry(stream, c.req.filename);
+  const stream = await getPackage(c.var.packageName, c.var.packageVersion);
+  const entry = await findEntry(stream, c.var.filename);
 
   if (!entry) {
-    return c.text(`Not found: ${c.req.packageSpec}${c.req.filename}`, 404);
+    return c.text(`Not found: ${c.var.packageSpec}${c.var.filename}`, 404);
   }
 
   const details = {
@@ -48,11 +48,11 @@ export async function serveFileBrowser(c) {
     );
   }
 
-  c.req.browseTarget = {
-    path: c.req.filename,
+  c.set("browseTarget" , {
+    path: c.var.filename,
     type: 'file',
     details
-  };
+  });
 
   return serveBrowsePage(c);
 }

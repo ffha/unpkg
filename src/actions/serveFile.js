@@ -1,5 +1,4 @@
 import {getContentTypeHeader} from '../utils/getContentTypeHeader.js';
-import { etag } from './etag.js';
 
 function extname(path) {
   return path.split('.').pop();
@@ -7,18 +6,17 @@ function extname(path) {
 export async function serveFile(c) {
   const tags = ['file'];
 
-  const ext = extname(c.req.entry.path).substr(1);
+  const ext = extname(c.var.entry.path).substr(1);
   if (ext) {
     tags.push(`${ext}-file`);
   }
 
-  return new Response(c.req.entry.content, {
+  return new Response(c.var.entry.content, {
     headers: {
-      'Content-Type': getContentTypeHeader(c.req.entry.contentType),
-      'Content-Length': c.req.entry.size,
+      'Content-Type': getContentTypeHeader(c.var.entry.contentType),
+      'Content-Length': c.var.entry.size,
       'Cache-Control': 'public, max-age=31536000', // 1 year
-      'Last-Modified': c.req.entry.lastModified,
-      ETag: await etag(c.req.entry.content),
+      'Last-Modified': c.var.entry.lastModified,
       'Surrogate-Key': tags.join(', ')
     }
   });

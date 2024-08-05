@@ -6,14 +6,14 @@ import { rewriteBareModuleIdentifiers } from '../utils/rewriteBareModuleIdentifi
 export default async function serveJavaScriptModule(c) {
   try {
     const code = rewriteBareModuleIdentifiers(
-      new TextDecoder().decode(c.req.entry.content),
-      c.req.packageConfig
+      new TextDecoder().decode(c.var.entry.content),
+      c.var.packageConfig
     );
 
     return new Response(code, {
       headers: {
         'Content-Length': code.length,
-        'Content-Type': getContentTypeHeader(c.req.entry.contentType),
+        'Content-Type': getContentTypeHeader(c.var.entry.contentType),
         'Cache-Control': 'public, max-age=31536000', // 1 year
         ETag: await etag(new TextEncoder().encode(code)),
         'Surrogate-Key': 'file, js-file, js-module'
@@ -25,10 +25,10 @@ export default async function serveJavaScriptModule(c) {
     const errorName = error.constructor.name;
     const errorMessage = error.message.replace(
       /^.*?\/unpkg-.+?\//,
-      `/${c.req.packageSpec}/`
+      `/${c.var.packageSpec}/`
     );
     const codeFrame = error.codeFrame;
     const debugInfo = `${errorName}: ${errorMessage}\n\n${codeFrame}`;
-    return c.text(`Cannot generate module for ${c.req.packageSpec}${c.req.filename}\n\n${debugInfo}`, 500);
+    return c.text(`Cannot generate module for ${c.var.packageSpec}${c.var.filename}\n\n${debugInfo}`, 500);
   }
 }

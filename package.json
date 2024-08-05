@@ -7,20 +7,19 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "@fastly/js-compute": "3.8.1",
+    "@worker-tools/html": "2.0.0-pre.13",
+    "es-module-lexer": "^1.5.4",
+    "highlight.js": "^11.10.0",
     "hono": "^3.12.5",
-    "util": "^0.12.5"
+    "mrmime": "^2.0.0",
+    "semver": "^7.6.3",
+    "sort-by": "^1.2.0",
+    "validate-npm-package-name": "^5.0.1"
   },
   "devDependencies": {
-    "@worker-tools/html": "^2.0.0-pre.13",
     "date-fns": "^3.2.0",
-    "es-module-lexer": "^1.4.1",
     "eslint": "^8.56.0",
     "etag": "^1.8.1",
-    "highlight.js": "^11.9.0",
-    "mrmime": "^2.0.0",
-    "pretty-bytes": "^6.1.1",
-    "sort-by": "^1.2.0",
-    "validate-npm-package-name": "^5.0.0"
+    "pretty-bytes": "^6.1.1"
   }
 }

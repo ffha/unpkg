@@ -1,7 +1,7 @@
-import { Untar } from "./Untar";
+import { Untar } from "./Untar.js";
 import { getPackage } from '../utils/npm.js';
 import { fileMetadata } from "./fileMetadata.js";
-import { toType } from "./toType";
+import { toType } from "./toType.js";
 function dirname(path) {
   if (!path.length) {
     return '.';
@@ -91,11 +91,11 @@ function getMetadata(entry, entries) {
 }
 
 export async function serveDirectoryMetadata(c) {
-  const stream = await getPackage(c.req.packageName, c.req.packageVersion);
+  const stream = await getPackage(c.var.packageName, c.var.packageVersion);
   if (!stream) {
     return c.text('Not Found', 404)
   }
-  const filename = c.req.filename.slice(0, -1) || '/';
+  const filename = c.var.filename.slice(0, -1) || '/';
   const entries = await findMatchingEntries(stream, filename);
   const metadata = getMetadata(entries[filename], entries);
 

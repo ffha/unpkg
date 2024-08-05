@@ -5,13 +5,13 @@ import { getPackageConfig, getVersionsAndTags } from '../utils/npm.js';
 
 function semverRedirect(c, newVersion) {
   const url = new URL(c.req.url);
-  const append = c.req.browse ? '/browse' : '';
+  const append = c.get("browse") ? '/browse' : '';
   return new Response('', {
     status: 302,
     headers: {
       'Cache-Control': 'public, s-maxage=600, max-age=60', // 10 mins on CDN, 1 min on clients
       'Surrogate-Key': 'redirect, semver-redirect',
-      Location: append + createPackageURL(c.req.packageName, newVersion, c.req.filename, url.searchParams),
+      Location: append + createPackageURL(c.get("packageName"), newVersion, c.var.filename, url.search),
     }
   });
 }
@@ -41,25 +41,26 @@ async function resolveVersion(packageName, range) {
  */
 export async function validatePackageVersion(c, next) {
   const version = await resolveVersion(
-    c.req.packageName,
-    c.req.packageVersion
+    c.var.packageName,
+    c.var.packageVersion
   );
 
   if (!version) {
-    return c.text(`Cannot find package ${c.req.packageSpec}`, 404);
+    return c.text(`Cannot find package ${c.var.packageSpec}`, 404);
   }
 
-  if (version !== c.req.packageVersion) {
+  if (version !== c.var.packageVersion) {
     return semverRedirect(c, version);
   }
-
-  c.req.packageConfig = await getPackageConfig(
-    c.req.packageName,
-    c.req.packageVersion,
+  const packageConfig = await getPackageConfig(
+    c.var.packageName,
+    c.var.packageVersion,
   );
 
-  if (!c.req.packageConfig) {
-    return c.text(`Cannot get config for package ${c.req.packageSpec}`, 500);
+  c.set("packageConfig", packageConfig);
+
+  if (!c.var.packageConfig) {
+    return c.text(`Cannot get config for package ${c.var.packageSpec}`, 500);
   }
 
   await next();

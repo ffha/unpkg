@@ -1,5 +1,5 @@
 import { lookup } from 'mrmime';
-import { toType } from "./toType";
+import { toType } from "./toType.js";
 
 export async function fileMetadata(file) {
   const digest = await crypto.subtle.digest('SHA-384', file.buffer);

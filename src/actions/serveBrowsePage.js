@@ -17,21 +17,21 @@ async function getAvailableVersions(packageName, log) {
 
 export async function serveBrowsePage(c) {
   const availableVersions = await getAvailableVersions(
-    c.req.packageName,
+    c.var.packageName,
     c.req.log
   );
   const data = {
-    packageName: c.req.packageName,
-    packageVersion: c.req.packageVersion,
+    packageName: c.var.packageName,
+    packageVersion: c.var.packageVersion,
     availableVersions: availableVersions,
-    filename: c.req.filename,
-    target: c.req.browseTarget
+    filename: c.var.filename,
+    target: c.var.browseTarget
   };
   const content = BrowseApp(data);
 
   const html = MainTemplate({
-    title: `UNPKG - ${c.req.packageName}`,
-    description: `The CDN for ${c.req.packageName}`,
+    title: `UNPKG - ${c.var.packageName}`,
+    description: `The CDN for ${c.var.packageName}`,
     data,
     content
   });
@@ -40,7 +40,6 @@ export async function serveBrowsePage(c) {
     headers: {
       'Cache-Control': 'public, max-age=14400',// 4 hours
       'Surrogate-Key': 'browse',
-      "x-compress-hint": "on",
     }
   })
 }

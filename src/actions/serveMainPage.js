@@ -1,4 +1,4 @@
-import { HTMLResponse } from "@worker-tools/html";
+import { HTMLResponse } from '@worker-tools/html';
 import MainApp from '../client/main/App.js';
 import MainTemplate from '../templates/MainTemplate.js';
 

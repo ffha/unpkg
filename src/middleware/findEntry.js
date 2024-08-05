@@ -12,8 +12,8 @@ function fileRedirect(c, entry) {
       'Cache-Control': 'public, max-age=31536000', // 1 year
       'Surrogate-Key': 'redirect, file-redirect',
       Location: createPackageURL(
-        c.req.packageName,
-        c.req.packageVersion,
+        c.var.packageName,
+        c.var.packageVersion,
         entry.path,
         new URL(c.req.url).searchParams
       )
@@ -30,8 +30,8 @@ function indexRedirect(c, entry) {
       'Cache-Control': 'public, max-age=31536000', // 1 year
       'Surrogate-Key': 'redirect, file-redirect',
       Location: createPackageURL(
-        c.req.packageName,
-        c.req.packageVersion,
+        c.var.packageName,
+        c.var.packageVersion,
         entry.path,
         new URL(c.req.url).searchParams
       )
@@ -75,14 +75,14 @@ async function searchEntries(arrayBuffer, filename) {
  * Redirect to the "index" file if a directory was requested.
  */
 export async function findEntry(c, next) {
-  const arrayBuffer = await getPackage(c.req.packageName, c.req.packageVersion);
+  const arrayBuffer = await getPackage(c.var.packageName, c.var.packageVersion);
   const { foundEntry: entry, matchingEntries: entries } = await searchEntries(
     arrayBuffer,
-    c.req.filename
+    c.var.filename
   );
 
   if (!entry) {
-    return c.text(`Cannot find "${c.req.filename}" in ${c.req.packageSpec}`, {
+    return c.text(`Cannot find "${c.var.filename}" in ${c.var.packageSpec}`, {
       status: 404,
       headers: {
         'Cache-Control': 'public, max-age=31536000', // 1 year
@@ -91,7 +91,7 @@ export async function findEntry(c, next) {
     })
   }
 
-  if (entry.type === 'file' && entry.path !== c.req.filename) {
+  if (entry.type === 'file' && entry.path !== c.var.filename) {
     return fileRedirect(c, entry);
   }
 
@@ -107,7 +107,7 @@ export async function findEntry(c, next) {
       return indexRedirect(c, indexEntry);
     }
 
-    return c.text(`Cannot find an index in "${c.req.filename}" in ${c.req.packageSpec}`,{
+    return c.text(`Cannot find an index in "${c.var.filename}" in ${c.var.packageSpec}`,{
       status: 404,
       headers: {
         'Cache-Control': 'public, max-age=31536000', // 1 year
@@ -116,7 +116,7 @@ export async function findEntry(c, next) {
     });
   }
 
-  c.req.entry = entry;
+  c.set("entry", entry)
 
   await next();
 }

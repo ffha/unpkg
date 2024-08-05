@@ -21,20 +21,20 @@ async function findMatchingEntries(c, stream, filename) {
 }
 
 export async function serveDirectoryBrowser(c) {
-  const stream = await getPackage(c.req.packageName, c.req.packageVersion);
+  const stream = await getPackage(c.var.packageName, c.var.packageVersion);
 
-  const filename = c.req.filename.slice(0, -1) || '/';
+  const filename = c.var.filename.slice(0, -1) || '/';
   const entries = await findMatchingEntries(c, stream, filename);
 
   if (entries.length === 0) {
-    return c.text(`Not found: ${c.req.packageSpec}${c.req.filename}`, 404);
+    return c.text(`Not found: ${c.var.packageSpec}${c.var.filename}`, 404);
   }
 
-  c.req.browseTarget = {
+  c.set("browseTarget", {
     path: filename,
     type: 'directory',
     details: entries
-  };
+  });
 
   return await serveBrowsePage(c);
 }

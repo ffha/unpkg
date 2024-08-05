@@ -1,12 +1,10 @@
-import {etag} from './etag.js';
-
 import {getContentTypeHeader} from '../utils/getContentTypeHeader.js';
 import {rewriteBareModuleIdentifiers, insert} from '../utils/rewriteBareModuleIdentifiers.js';
 
 const r = /<script\s+?type\s*=\s*["']module["']\s*?>(.+?)<\/script>/gus;
 export default async function serveHTMLModule(c) {
   try {
-    let code = new TextDecoder().decode(c.req.entry.content);
+    let code = new TextDecoder().decode(c.var.entry.content);
 
     for (const m of Array.from(code.matchAll(r)).reverse()) {
       code = insert(code, m.index + m[0].indexOf(m[1]), rewriteBareModuleIdentifiers(m[1], {}), m[1].length)
@@ -15,9 +13,8 @@ export default async function serveHTMLModule(c) {
     return new Response(code, {
       headers: {
         'Content-Length': code.length,
-        'Content-Type': getContentTypeHeader(c.req.entry.contentType),
+        'Content-Type': getContentTypeHeader(c.var.entry.contentType),
         'Cache-Control': 'public, max-age=31536000', // 1 year
-        ETag: await etag(new TextEncoder().encode(code)),
         'Surrogate-Key': 'file, html-file, html-module'
       }
     });

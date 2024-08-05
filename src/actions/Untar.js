@@ -1,4 +1,4 @@
-import { UntarStream } from "./UntarStream";
+import { UntarStream } from "./UntarStream.js";
 function dirname(path) {
     if (!path.length) {
         return '.';

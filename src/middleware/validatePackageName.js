@@ -10,16 +10,16 @@ function isHash(value) {
  * Reject requests for invalid npm package names.
  */
 export async function validatePackageName(c, next) {
-  if (isHash(c.req.packageName)) {
-    return c.text(`Invalid package name "${c.req.packageName}" (cannot be a hash)`, 403);
+  if (isHash(c.var.packageName)) {
+    return c.text(`Invalid package name "${c.var.packageName}" (cannot be a hash)`, 403);
   }
 
-  const errors = validateNpmPackageName(c.req.packageName).errors;
+  const errors = validateNpmPackageName(c.var.packageName).errors;
 
   if (errors) {
     const reason = errors.join(', ');
 
-    return c.text(`Invalid package name "${c.req.packageName}" (${reason})`, 403);
+    return c.text(`Invalid package name "${c.var.packageName}" (${reason})`, 403);
   }
 
   await next();

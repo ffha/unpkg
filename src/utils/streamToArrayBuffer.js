@@ -1,4 +1,4 @@
-import { concatenate } from './concatenate';
+import { concatenate } from './concatenate.js';
 
 export async function streamToArrayBuffer(stream) {
     const reader = stream.getReader();

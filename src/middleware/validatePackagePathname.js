@@ -6,7 +6,7 @@ import { parsePackagePathname } from '../utils/parsePackagePathname.js';
 export async function validatePackagePathname(c, next) {
   const url = new URL(c.req.url)
   let path = url.pathname
-  if (c.req.browse) {
+  if (c.get("browse")) {
     path = path.slice('/browse'.length)
   }
   const parsed = parsePackagePathname(path);
@@ -15,10 +15,10 @@ export async function validatePackagePathname(c, next) {
     return c.json({ error: `Invalid URL: ${path}` }, 403);
   }
 
-  c.req.packageName = parsed.packageName;
-  c.req.packageVersion = parsed.packageVersion;
-  c.req.packageSpec = parsed.packageSpec;
-  c.req.filename = parsed.filename;
+  c.set("packageName", parsed.packageName);
+  c.set("packageVersion", parsed.packageVersion);
+  c.set("packageSpec", parsed.packageSpec);
+  c.set("filename", parsed.filename);
 
   await next();
 }

@@ -1,2 +1,3 @@
 import { createServer } from './createServer.js';
-createServer().fire();
+const app = createServer()
+export default app;
