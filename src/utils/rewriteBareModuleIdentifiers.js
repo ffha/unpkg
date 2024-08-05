@@ -1,4 +1,4 @@
-import { parse } from 'es-module-lexer/js';
+import { parse, init } from 'es-module-lexer';
 
 const origin = 'https://unpkg.com';
 
@@ -29,13 +29,14 @@ export function insert(currentString, start, insertedString, delCount) {
   return currentString.slice(0, start) + insertedString + currentString.slice(start + Math.abs(delCount));
 }
 
-export function rewriteBareModuleIdentifiers(code, packageConfig) {
+export async function rewriteBareModuleIdentifiers(code, packageConfig) {
   const dependencies = Object.assign(
     {},
     packageConfig.peerDependencies,
     packageConfig.dependencies
   );
   let additionalIndex = 0;
+  await init;
   const [imports] = parse(code);
   for (const _import of imports) {
     if (_import.a === -1) {

@@ -7,7 +7,7 @@ export default async function serveHTMLModule(c) {
     let code = new TextDecoder().decode(c.var.entry.content);
 
     for (const m of Array.from(code.matchAll(r)).reverse()) {
-      code = insert(code, m.index + m[0].indexOf(m[1]), rewriteBareModuleIdentifiers(m[1], {}), m[1].length)
+      code = insert(code, m.index + m[0].indexOf(m[1]), await rewriteBareModuleIdentifiers(m[1], {}), m[1].length)
     }
 
     return new Response(code, {

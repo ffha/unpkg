@@ -5,7 +5,7 @@ import { rewriteBareModuleIdentifiers } from '../utils/rewriteBareModuleIdentifi
 
 export default async function serveJavaScriptModule(c) {
   try {
-    const code = rewriteBareModuleIdentifiers(
+    const code = await rewriteBareModuleIdentifiers(
       new TextDecoder().decode(c.var.entry.content),
       c.var.packageConfig
     );
